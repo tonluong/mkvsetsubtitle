@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Notes:
+#   mkvmerge track count starts at 0
+#   mkvpropedit track count starts at 1
+
+DEFAULT_LANG=$1
+
+for file in *.mkv; do
+    FN=$file;
+    SUB_TRACKS=`mkvmerge -I $file | grep subtitles | awk '{ print substr($3, 0, 1) }'`;
+    DEFAULT_TRACK=`mkvmerge -I $file | grep subtitles | grep "language:$DEFAULT_LANG" | awk '{ print substr($3, 0, 1) }'`;
+    
+    # turn off default on all subtitle tracks
+    for track in $SUB_TRACKS; do
+        track_off=$((track+1));
+        off_cmd="mkvpropedit $FN --edit track:$track_off --set flag-default=0"
+        eval $off_cmd; 
+    done
+    
+    # turn on default for specific language (eng, fre, spa)
+    track_on=$((DEFAULT_TRACK+1));
+    on_cmd="mkvpropedit $FN --edit track:$track_on --set flag-default=1";
+    eval $on_cmd;
+
+done
